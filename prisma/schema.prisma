@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Level {
+  A1
+  A2
+  B1
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  ORDERING
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  pendingEmail        String?
+  passwordHash        String
+  emailVerified       DateTime?
+  createdAt           DateTime             @default(now())
+  currentStreak       Int                  @default(0)
+  longestStreak       Int                  @default(0)
+  lastActiveDate      DateTime?
+  topics              Topic[]
+  textAttempts        TextAttempt[]
+  verificationTokens  VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  // Set only for an email-change confirmation link; null means this token
+  // confirms the account's current (registration) email instead.
+  newEmail  String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model HebrewText {
+  id          String        @id @default(cuid())
+  title       String
+  level       Level
+  content     String
+  translation String
+  createdAt   DateTime      @default(now())
+  vocabulary  VocabItem[]
+  questions   Question[]
+  attempts    TextAttempt[]
+}
+
+model VocabItem {
+  id          String     @id @default(cuid())
+  textId      String
+  text        HebrewText @relation(fields: [textId], references: [id], onDelete: Cascade)
+  hebrew      String
+  translation String
+  order       Int        @default(0)
+}
+
+model Question {
+  id           String       @id @default(cuid())
+  textId       String
+  text         HebrewText   @relation(fields: [textId], references: [id], onDelete: Cascade)
+  type         QuestionType @default(MULTIPLE_CHOICE)
+  prompt       String
+  // MULTIPLE_CHOICE: JSON string[] of options
+  // ORDERING: JSON string[] of items in the correct order
+  options      String?
+  correctIndex Int? // MULTIPLE_CHOICE
+  correctBool  Boolean? // TRUE_FALSE
+  correctText  String? // FILL_BLANK
+  order        Int          @default(0)
+}
+
+model TextAttempt {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  textId      String
+  text        HebrewText @relation(fields: [textId], references: [id], onDelete: Cascade)
+  score       Int
+  total       Int
+  completedAt DateTime   @default(now())
+}
+
+model Topic {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  cards     Card[]
+}
+
+model Card {
+  id             String    @id @default(cuid())
+  topicId        String
+  topic          Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  front          String
+  back           String
+  createdAt      DateTime  @default(now())
+  interval       Int       @default(0)
+  easeFactor     Float     @default(2.5)
+  repetitions    Int       @default(0)
+  dueDate        DateTime  @default(now())
+  lastReviewedAt DateTime?
+}
+
+model GrammarTopic {
+  id        String   @id @default(cuid())
+  level     Level
+  title     String
+  summary   String
+  content   String // JSON string: GrammarBlock[] (see src/lib/grammar-types.ts)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,215 @@
+@import "tailwindcss";
+
+/* Site is light-only by design (no system dark-mode auto-switch) — this
+   makes `dark:` utilities require an explicit .dark ancestor, which we
+   never add, so they simply never fire. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f6f9fd;
+  --foreground: #3c3c3c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-hebrew: var(--font-hebrew);
+
+  --color-brand-50: #eff9ff;
+  --color-brand-100: #dff3fe;
+  --color-brand-200: #b9e6fc;
+  --color-brand-300: #7dd2fa;
+  --color-brand-400: #3ebcf7;
+  --color-brand-500: #1cb0f6;
+  --color-brand-600: #0d97db;
+  --color-brand-700: #0a76ac;
+  --color-brand-800: #0b5d87;
+  --color-brand-900: #0e4a6b;
+  --color-brand-950: #082f44;
+}
+
+html {
+  /* Always reserve the scrollbar's width, even on short pages — otherwise
+     switching between a tall page (scrollbar visible) and a short one
+     (scrollbar gone) shifts the centered content sideways by half the
+     scrollbar's width on every navigation. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+[lang="he"] {
+  font-family: var(--font-hebrew), ui-sans-serif, sans-serif;
+  line-height: 1.9;
+}
+
+/* Fast, subtle native View Transitions between routes (see page-transition.tsx). */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 160ms;
+  animation-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Buttons: solid fill, layered soft shadow, gentle lift on hover, settle on press. */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.875rem;
+  background: var(--color-brand-600);
+  color: white;
+  font-weight: 600;
+  padding: 0.8rem 1.6rem;
+  box-shadow:
+    0 1px 2px rgba(14, 74, 107, 0.15),
+    0 10px 22px -10px rgba(14, 74, 107, 0.55);
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s ease, background-color 0.18s ease;
+}
+.btn-primary:hover {
+  background: var(--color-brand-700);
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(14, 74, 107, 0.16),
+    0 16px 30px -10px rgba(14, 74, 107, 0.5);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 1px 2px rgba(14, 74, 107, 0.15),
+    0 6px 14px -8px rgba(14, 74, 107, 0.4);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.875rem;
+  background: white;
+  color: var(--color-stone-700);
+  font-weight: 600;
+  padding: calc(0.8rem - 1px) calc(1.6rem - 1px);
+  border: 1px solid var(--color-stone-200);
+  box-shadow: 0 1px 2px rgba(20, 24, 31, 0.04);
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s ease, background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  background: var(--color-stone-50);
+  border-color: var(--color-stone-300);
+  box-shadow: 0 12px 24px -14px rgba(20, 24, 31, 0.2);
+}
+.btn-secondary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 1px 2px rgba(20, 24, 31, 0.06);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* For a secondary button placed on a solid brand-color banner. */
+.btn-on-brand,
+.btn-on-brand:hover {
+  background: white;
+  color: var(--color-brand-800);
+  border-color: white;
+}
+
+.btn-sm {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
+  border-radius: 0.65rem;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--float-rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-8px) rotate(var(--float-rotate, 0deg));
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+.animate-pop {
+  animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-pop,
+  .animate-fade-in,
+  .animate-float {
+    animation: none;
+  }
+}
