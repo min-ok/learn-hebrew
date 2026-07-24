@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { synthesizeSpeech, ttsConfigured } from "@/lib/tts";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const HEBREW_RE = new RegExp("[\\u0590-\\u05FF]");
 
@@ -9,6 +10,10 @@ export async function GET(request: Request) {
 
   if (!text || text.length > 2000 || !HEBREW_RE.test(text)) {
     return NextResponse.json({ error: "Некорректный текст" }, { status: 400 });
+  }
+
+  if (!checkRateLimit(`tts:${clientIp(request)}`, 15, 60_000)) {
+    return NextResponse.json({ error: "Слишком много запросов, попробуйте позже" }, { status: 429 });
   }
 
   if (!ttsConfigured()) {

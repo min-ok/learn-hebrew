@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { translateText, translateConfigured } from "@/lib/translate";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const HEBREW_RE = new RegExp("[\\u0590-\\u05FF]");
 
@@ -9,6 +10,10 @@ export async function GET(request: Request) {
 
   if (!text || text.length > 300 || !HEBREW_RE.test(text)) {
     return NextResponse.json({ error: "Некорректный текст" }, { status: 400 });
+  }
+
+  if (!checkRateLimit(`translate:${clientIp(request)}`, 30, 60_000)) {
+    return NextResponse.json({ error: "Слишком много запросов, попробуйте позже" }, { status: 429 });
   }
 
   if (!translateConfigured()) {

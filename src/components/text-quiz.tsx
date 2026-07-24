@@ -34,6 +34,26 @@ function isAnswered(question: QuizQuestion, answer: QuizAnswerValue) {
   }
 }
 
+type QuestionBlock = {
+  type: QuizQuestion["type"];
+  entries: { question: QuizQuestion; index: number }[];
+};
+
+// Groups consecutive same-type questions into one exercise block (British
+// Council style: one instruction header per task, not repeated per question).
+function groupIntoBlocks(questions: QuizQuestion[]): QuestionBlock[] {
+  const blocks: QuestionBlock[] = [];
+  questions.forEach((question, index) => {
+    const last = blocks[blocks.length - 1];
+    if (last && last.type === question.type) {
+      last.entries.push({ question, index });
+    } else {
+      blocks.push({ type: question.type, entries: [{ question, index }] });
+    }
+  });
+  return blocks;
+}
+
 export function TextQuiz({ textId, questions }: { textId: string; questions: QuizQuestion[] }) {
   const [answers, setAnswers] = useState<QuizAnswerValue[]>(() =>
     questions.map((q) => initialAnswer(q.type)),
@@ -59,18 +79,29 @@ export function TextQuiz({ textId, questions }: { textId: string; questions: Qui
     setResult(null);
   }
 
+  const blocks = groupIntoBlocks(questions);
+
   return (
-    <div className="flex flex-col gap-5">
-      {questions.map((question, index) => (
-        <QuestionCard
-          key={question.id}
-          index={index}
-          question={question}
-          answer={answers[index]}
-          onChange={(value) => setAnswer(index, value)}
-          resultItem={result?.results[index]}
-          locked={!!result}
-        />
+    <div className="flex flex-col gap-6">
+      {blocks.map((block, blockIndex) => (
+        <div key={blockIndex} className="flex flex-col gap-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-400">
+            Задание {blockIndex + 1}. {TYPE_LABEL[block.type]}
+          </h3>
+          <div className="flex flex-col gap-3">
+            {block.entries.map(({ question, index }) => (
+              <QuestionCard
+                key={question.id}
+                index={index}
+                question={question}
+                answer={answers[index]}
+                onChange={(value) => setAnswer(index, value)}
+                resultItem={result?.results[index]}
+                locked={!!result}
+              />
+            ))}
+          </div>
+        </div>
       ))}
 
       {!result ? (
@@ -121,9 +152,7 @@ function QuestionCard({
   return (
     <div className="rounded-xl bg-white p-4 shadow-[0_4px_15px_rgba(0,0,0,0.03)] dark:bg-stone-900 dark:shadow-black/20">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-400">
-          {index + 1}. {TYPE_LABEL[question.type]}
-        </span>
+        <span className="text-xs font-semibold text-stone-400 dark:text-stone-600">{index + 1}</span>
         {resultItem && (
           <span className={resultItem.correct ? "text-sm text-green-600" : "text-sm text-red-600"}>
             {resultItem.correct ? "Верно" : "Неверно"}

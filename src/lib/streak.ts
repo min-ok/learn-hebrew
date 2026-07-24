@@ -37,3 +37,17 @@ export async function registerActivity(userId: string) {
     },
   });
 }
+
+/**
+ * The stored `currentStreak` only updates when the user registers activity,
+ * so it stays stuck at its last value between visits. This derives the
+ * streak actually in effect right now — burned back to 0 once a full
+ * calendar day has passed with no activity (visits "yesterday" still keep
+ * the streak alive since today isn't over yet).
+ */
+export function getEffectiveStreak(currentStreak: number, lastActiveDate: Date | null): number {
+  if (!lastActiveDate) return 0;
+
+  const diffDays = Math.round((startOfUtcDay(new Date()) - startOfUtcDay(lastActiveDate)) / 86_400_000);
+  return diffDays <= 1 ? currentStreak : 0;
+}

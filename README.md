@@ -4,11 +4,7 @@ Next.js 16 (App Router) + TypeScript + Tailwind, Prisma + PostgreSQL, NextAuth v
 
 ## Локальный запуск
 
-1. Получите Postgres-базу. Проще всего — **Netlify DB** (на Neon), раз проект всё равно едет на Netlify:
-   ```bash
-   npx netlify db init
-   ```
-   Это создаст базу и подставит `DATABASE_URL` в `.env` автоматически. Альтернатива — создать проект вручную на [neon.tech](https://neon.tech) или [supabase.com](https://supabase.com) и скопировать connection string.
+1. Получите Postgres-базу — проще всего создать проект на [neon.tech](https://neon.tech) (бесплатный тариф, проект уже использует Neon serverless driver adapter) и скопировать connection string. Альтернатива — [supabase.com](https://supabase.com) или любой другой Postgres-хостинг.
 
 2. Скопируйте `.env.example` в `.env` (если ещё не создан) и впишите `DATABASE_URL` и `AUTH_SECRET`:
    ```bash
@@ -33,18 +29,23 @@ Next.js 16 (App Router) + TypeScript + Tailwind, Prisma + PostgreSQL, NextAuth v
    npm run dev
    ```
 
-## Деплой на Netlify
+## Деплой на Vercel
 
-1. Запушьте репозиторий на GitHub, подключите его в Netlify ("Import an existing project").
-2. В настройках сайта (Site configuration → Environment variables) добавьте:
-   - `DATABASE_URL` — строка подключения к Postgres;
+1. Запушьте репозиторий на GitHub, импортируйте его в Vercel ("Add New... → Project"). Next.js определяется автоматически, ничего дополнительно настраивать не нужно.
+2. В настройках проекта (Settings → Environment Variables) добавьте:
+   - `DATABASE_URL` — строка подключения к Postgres (Neon, см. выше);
    - `AUTH_SECRET` — сгенерированный секрет;
    - `RESEND_API_KEY` — ключ для отправки писем подтверждения email и сообщений из поддержки (иначе регистрация будет работать, но письма никто не получит);
    - `EMAIL_FROM` — по желанию, иначе используется `onboarding@resend.dev`;
    - `SUPPORT_EMAIL` — куда доставлять сообщения с `/support`;
-   - `GOOGLE_TTS_API_KEY` — ключ Google Cloud Text-to-Speech для озвучки примеров (по желанию, без него кнопка 🔊 просто не срабатывает).
-3. Netlify сам подхватит Next.js через `@netlify/plugin-nextjs` (указан в `netlify.toml`). Команда сборки `npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm run build` — при каждом деплое клиент Prisma пересобирается под актуальную схему, накатываются миграции и обновляется контент текстов/грамматики.
-4. Если базу делаете через Netlify DB (`netlify db init` в консоли сайта или CLI), `DATABASE_URL` пропишется автоматически.
+   - `GOOGLE_TTS_API_KEY` — ключ Google Cloud Text-to-Speech для озвучки примеров (по желанию, без него кнопка 🔊 просто не срабатывает);
+   - `NEXT_PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN` — по желанию, аналитика.
+3. Билд (`npm run build`) сам прогоняет `prisma migrate deploy` перед `next build` — миграции накатываются на каждый деплой, а `prisma generate` гоняется через `postinstall`, так что клиент Prisma всегда пересобран под актуальную схему.
+4. `prisma db seed` в билд не входит (раньше это гонялось на каждый деплой и жрало build-minutes) — прогоните его вручную один раз после первого деплоя (или при изменении контента):
+   ```bash
+   npx prisma db seed
+   ```
+   с `DATABASE_URL`, указывающим на прод-базу (например, экспортировав его из `vercel env pull`).
 
 ## Структура
 

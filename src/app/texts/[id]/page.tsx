@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { TranslationToggle } from "@/components/translation-toggle";
 import { TextQuiz } from "@/components/text-quiz";
 import { shuffle } from "@/lib/shuffle";
@@ -12,13 +13,23 @@ import { SelectableText } from "@/components/selectable-text";
 export default async function TextPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const text = await prisma.hebrewText.findUnique({
-    where: { id },
-    include: {
-      vocabulary: { orderBy: { order: "asc" } },
-      questions: { orderBy: { order: "asc" } },
-    },
-  });
+  const session = await auth();
+
+  const [text, topics] = await Promise.all([
+    prisma.hebrewText.findUnique({
+      where: { id },
+      include: {
+        questions: { orderBy: { order: "asc" } },
+      },
+    }),
+    session?.user
+      ? prisma.topic.findMany({
+          where: { userId: session.user.id },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   if (!text) notFound();
 
@@ -64,7 +75,7 @@ export default async function TextPage({ params }: { params: Promise<{ id: strin
         <div className="mb-2 flex justify-end">
           <SpeakButton text={text.content} />
         </div>
-        <SelectableText>
+        <SelectableText topics={topics} isLoggedIn={Boolean(session?.user)}>
           <p dir="rtl" lang="he" className="whitespace-pre-line text-right text-2xl leading-relaxed text-stone-900 dark:text-stone-100">
             {text.content}
           </p>
@@ -75,28 +86,6 @@ export default async function TextPage({ params }: { params: Promise<{ id: strin
       </section>
 
       <TranslationToggle translation={text.translation} />
-
-      {text.vocabulary.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-lg font-semibold text-stone-900 dark:text-stone-50">Новые слова</h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {text.vocabulary.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center justify-between gap-2 rounded-lg bg-white px-4 py-2 shadow-[0_4px_15px_rgba(0,0,0,0.03)] dark:bg-stone-900 dark:shadow-black/20"
-              >
-                <div className="flex items-center gap-1.5">
-                  <SpeakButton text={item.hebrew} />
-                  <span dir="rtl" lang="he" className="text-lg text-stone-900 dark:text-stone-100">
-                    {item.hebrew}
-                  </span>
-                </div>
-                <span className="text-stone-600 dark:text-stone-400">{item.translation}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {quizQuestions.length > 0 && (
         <section>

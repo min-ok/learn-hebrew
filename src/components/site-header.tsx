@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { UserMenu } from "@/components/user-menu";
 import { StreakBadge } from "@/components/streak-badge";
+import { getEffectiveStreak } from "@/lib/streak";
 
 const navItems = [
   { href: "/texts", label: "Тексты" },
@@ -15,9 +16,10 @@ export async function SiteHeader() {
   const user = session?.user
     ? await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { name: true, currentStreak: true },
+        select: { name: true, currentStreak: true, lastActiveDate: true },
       })
     : null;
+  const streak = user ? getEffectiveStreak(user.currentStreak, user.lastActiveDate) : 0;
 
   return (
     <header className="sticky top-0 z-10 bg-white/90 shadow-[0_1px_2px_rgba(0,0,0,0.05)] backdrop-blur dark:bg-stone-950/90 dark:shadow-black/30">
@@ -44,7 +46,7 @@ export async function SiteHeader() {
         <div className="order-2 flex items-center gap-3 sm:order-3">
           {user ? (
             <>
-              <StreakBadge streak={user.currentStreak} />
+              <StreakBadge streak={streak} />
               <UserMenu name={user.name} />
             </>
           ) : (

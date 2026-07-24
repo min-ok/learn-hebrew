@@ -70,6 +70,19 @@ export async function deleteCard(cardId: string) {
   revalidatePath(`/flashcards/${card.topicId}`);
 }
 
+export async function addCardFromSelection(topicId: string, front: string, back: string) {
+  const userId = await requireUserId();
+  await requireTopicOwner(topicId, userId);
+
+  const trimmedFront = front.trim();
+  const trimmedBack = back.trim();
+  if (!trimmedFront || !trimmedBack) return { ok: false as const };
+
+  await prisma.card.create({ data: { topicId, front: trimmedFront, back: trimmedBack } });
+  revalidatePath(`/flashcards/${topicId}`);
+  return { ok: true as const };
+}
+
 export async function reviewCard(cardId: string, quality: 1 | 3 | 4 | 5) {
   const session = await auth();
   if (!session?.user) redirect("/login");
