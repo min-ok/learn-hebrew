@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createAndSendPasswordResetEmail } from "@/lib/verification";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().trim().email("Некорректный email"),
@@ -18,11 +19,15 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email.toLowerCase();
+
+  if (!checkRateLimit(`forgot-password:${clientIp(request)}:${email}`, 3, 10 * 60_000)) {
+    return NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
-    const origin = new URL(request.url).origin;
-    await createAndSendPasswordResetEmail(user.id, user.email, user.name, origin);
+    await createAndSendPasswordResetEmail(user.id, user.email, user.name);
   }
 
   // Always respond with success so we don't leak whether an email is registered.

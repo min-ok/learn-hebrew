@@ -1,19 +1,37 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+
+const schema = z.object({
+  email: z.string().trim().email(),
+  code: z.string().trim().length(6),
+});
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const token = typeof body?.token === "string" ? body.token : null;
-
-  if (!token) {
-    return NextResponse.json({ error: "Некорректная ссылка подтверждения" }, { status: 400 });
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Введите код из письма" }, { status: 400 });
   }
 
-  const record = await prisma.verificationToken.findUnique({ where: { token } });
+  const email = parsed.data.email.toLowerCase();
+  const { code } = parsed.data;
+
+  if (!checkRateLimit(`verify-email:${clientIp(request)}:${email}`, 8, 15 * 60_000)) {
+    return NextResponse.json({ error: "Слишком много попыток. Запросите новый код." }, { status: 429 });
+  }
+
+  const record = await prisma.verificationToken.findFirst({
+    where: {
+      code,
+      OR: [{ newEmail: email }, { newEmail: null, user: { email } }],
+    },
+  });
 
   if (!record || record.expiresAt < new Date()) {
     return NextResponse.json(
-      { error: "Ссылка недействительна или истекла. Запросите новое письмо." },
+      { error: "Код неверен или истёк. Запросите новый." },
       { status: 400 },
     );
   }

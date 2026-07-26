@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { PasswordInput } from "@/components/password-input";
-import { MailIcon } from "@/components/icons";
+import { VerifyEmailClient } from "@/components/verify-email-client";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -12,7 +12,6 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
-  const [resent, setResent] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -36,37 +35,8 @@ export default function RegisterPage() {
     setRegistered(true);
   }
 
-  async function handleResend() {
-    setResent(false);
-    await fetch("/api/verify-email/resend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    setResent(true);
-  }
-
   if (registered) {
-    return (
-      <div className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col items-center justify-center gap-3 px-4 py-12 text-center">
-        <MailIcon className="h-8 w-8 text-brand-700 dark:text-brand-400" />
-        <h1 className="text-xl font-semibold text-stone-900 dark:text-stone-50">Проверьте почту</h1>
-        <p className="text-stone-600 dark:text-stone-400">
-          Мы отправили письмо со ссылкой подтверждения на <strong>{email}</strong>. Перейдите по ней, чтобы
-          завершить регистрацию.
-        </p>
-        <button
-          onClick={handleResend}
-          className="btn-secondary btn-sm mt-2"
-        >
-          Отправить письмо ещё раз
-        </button>
-        {resent && <p className="text-sm text-brand-700 dark:text-brand-400">Письмо отправлено повторно.</p>}
-        <Link href="/login" className="mt-4 text-sm font-medium text-brand-700 dark:text-brand-400">
-          Перейти ко входу
-        </Link>
-      </div>
-    );
+    return <VerifyEmailClient defaultEmail={email} />;
   }
 
   return (

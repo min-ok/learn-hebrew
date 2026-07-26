@@ -91,15 +91,21 @@ export default function LoginPage() {
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         {needsVerification && (
           <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-            <p>Email ещё не подтверждён. Проверьте почту или запросите письмо заново.</p>
+            <p>Email ещё не подтверждён.</p>
+            <Link
+              href={`/verify-email?email=${encodeURIComponent(email)}`}
+              className="mt-2 inline-block font-medium underline underline-offset-2"
+            >
+              Ввести код подтверждения
+            </Link>
             <button
               type="button"
               onClick={handleResend}
-              className="mt-2 font-medium underline underline-offset-2"
+              className="mt-2 block font-medium underline underline-offset-2"
             >
-              Отправить письмо ещё раз
+              Отправить код ещё раз
             </button>
-            {resent && <p className="mt-1 text-brand-700 dark:text-brand-400">Письмо отправлено.</p>}
+            {resent && <p className="mt-1 text-brand-700 dark:text-brand-400">Код отправлен.</p>}
           </div>
         )}
         <button

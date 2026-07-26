@@ -48,8 +48,7 @@ export async function POST(request: Request) {
 
   await prisma.user.update({ where: { id: user.id }, data: { pendingEmail: newEmail } });
 
-  const origin = new URL(request.url).origin;
-  await createAndSendEmailChangeVerification(user.id, newEmail, user.name, origin);
+  await createAndSendEmailChangeVerification(user.id, newEmail, user.name);
 
   return NextResponse.json({ ok: true });
 }

@@ -2,61 +2,43 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail, sendEmailChangeVerification, sendPasswordResetEmail } from "@/lib/email";
 
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const CODE_TTL_MS = 15 * 60 * 1000;
 
-function generateToken() {
-  return crypto.randomBytes(32).toString("hex");
+function generateCode() {
+  return crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
 /** Registration flow: confirms the account's current email. */
-export async function createAndSendVerificationEmail(
-  userId: string,
-  email: string,
-  name: string,
-  origin: string,
-) {
-  const token = generateToken();
+export async function createAndSendVerificationEmail(userId: string, email: string, name: string) {
+  const code = generateCode();
 
   await prisma.verificationToken.deleteMany({ where: { userId, newEmail: null } });
   await prisma.verificationToken.create({
-    data: { userId, token, expiresAt: new Date(Date.now() + TOKEN_TTL_MS) },
+    data: { userId, code, expiresAt: new Date(Date.now() + CODE_TTL_MS) },
   });
 
-  const verifyUrl = `${origin}/verify-email?token=${token}`;
-  await sendVerificationEmail(email, name, verifyUrl);
+  await sendVerificationEmail(email, name, code);
 }
 
 /** Profile email-change flow: confirms ownership of a new email before it takes effect. */
-export async function createAndSendEmailChangeVerification(
-  userId: string,
-  newEmail: string,
-  name: string,
-  origin: string,
-) {
-  const token = generateToken();
+export async function createAndSendEmailChangeVerification(userId: string, newEmail: string, name: string) {
+  const code = generateCode();
 
   await prisma.verificationToken.deleteMany({ where: { userId, newEmail: { not: null } } });
   await prisma.verificationToken.create({
-    data: { userId, token, newEmail, expiresAt: new Date(Date.now() + TOKEN_TTL_MS) },
+    data: { userId, code, newEmail, expiresAt: new Date(Date.now() + CODE_TTL_MS) },
   });
 
-  const verifyUrl = `${origin}/verify-email?token=${token}`;
-  await sendEmailChangeVerification(newEmail, name, verifyUrl);
+  await sendEmailChangeVerification(newEmail, name, code);
 }
 
-export async function createAndSendPasswordResetEmail(
-  userId: string,
-  email: string,
-  name: string,
-  origin: string,
-) {
-  const token = generateToken();
+export async function createAndSendPasswordResetEmail(userId: string, email: string, name: string) {
+  const code = generateCode();
 
   await prisma.passwordResetToken.deleteMany({ where: { userId } });
   await prisma.passwordResetToken.create({
-    data: { userId, token, expiresAt: new Date(Date.now() + TOKEN_TTL_MS) },
+    data: { userId, code, expiresAt: new Date(Date.now() + CODE_TTL_MS) },
   });
 
-  const resetUrl = `${origin}/reset-password?token=${token}`;
-  await sendPasswordResetEmail(email, name, resetUrl);
+  await sendPasswordResetEmail(email, name, code);
 }

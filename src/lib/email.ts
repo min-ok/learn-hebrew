@@ -32,55 +32,53 @@ async function sendEmail(options: { to: string; subject: string; html: string; r
   }
 }
 
-export async function sendVerificationEmail(to: string, name: string, verifyUrl: string) {
-  const html = `
-    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2>Привет, ${escapeHtml(name)}!</h2>
-      <p>Подтвердите свой email, чтобы начать пользоваться карточками и стриком на сайте «Иврит».</p>
-      <p style="margin: 24px 0;">
-        <a href="${verifyUrl}" style="background:#0f766e;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;">
-          Подтвердить email
-        </a>
-      </p>
-      <p style="color:#78716c;font-size:13px;">Ссылка действительна 24 часа. Если вы не регистрировались — просто проигнорируйте это письмо.</p>
-    </div>
+function codeBlock(code: string) {
+  return `
+    <p style="margin: 24px 0;">
+      <span style="display:inline-block;background:#f5f5f4;color:#1c1917;font-size:32px;font-weight:700;letter-spacing:8px;padding:14px 24px;border-radius:8px;font-family:monospace;">
+        ${code}
+      </span>
+    </p>
   `;
-
-  await sendEmail({ to, subject: "Подтвердите email — Иврит", html });
 }
 
-export async function sendEmailChangeVerification(to: string, name: string, verifyUrl: string) {
+export async function sendVerificationEmail(to: string, name: string, code: string) {
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
       <h2>Привет, ${escapeHtml(name)}!</h2>
-      <p>Вы запросили смену email на этот адрес в настройках профиля на сайте «Иврит». Подтвердите его, чтобы завершить смену.</p>
-      <p style="margin: 24px 0;">
-        <a href="${verifyUrl}" style="background:#0f766e;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;">
-          Подтвердить новый email
-        </a>
-      </p>
-      <p style="color:#78716c;font-size:13px;">Ссылка действительна 24 часа. Пока вы её не откроете, вход остаётся по старому email. Если это были не вы — просто проигнорируйте это письмо.</p>
+      <p>Подтвердите свой email, чтобы начать пользоваться карточками и стриком на сайте «Иврит». Введите этот код на сайте:</p>
+      ${codeBlock(code)}
+      <p style="color:#78716c;font-size:13px;">Код действителен 15 минут. Если вы не регистрировались — просто проигнорируйте это письмо.</p>
     </div>
   `;
 
-  await sendEmail({ to, subject: "Подтвердите новый email — Иврит", html });
+  await sendEmail({ to, subject: "Код подтверждения email — Иврит", html });
 }
 
-export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string) {
+export async function sendEmailChangeVerification(to: string, name: string, code: string) {
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
       <h2>Привет, ${escapeHtml(name)}!</h2>
-      <p>Мы получили запрос на сброс пароля для вашего аккаунта на сайте «Иврит».</p>
-      <p style="margin: 24px 0;">
-        <a href="${resetUrl}" style="background:#0f766e;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;">
-          Придумать новый пароль
-        </a>
-      </p>
-      <p style="color:#78716c;font-size:13px;">Ссылка действительна 24 часа. Если вы не запрашивали сброс пароля — просто проигнорируйте это письмо, пароль останется прежним.</p>
+      <p>Вы запросили смену email на этот адрес в настройках профиля на сайте «Иврит». Введите этот код на сайте, чтобы завершить смену:</p>
+      ${codeBlock(code)}
+      <p style="color:#78716c;font-size:13px;">Код действителен 15 минут. Пока вы его не введёте, вход остаётся по старому email. Если это были не вы — просто проигнорируйте это письмо.</p>
     </div>
   `;
 
-  await sendEmail({ to, subject: "Сброс пароля — Иврит", html });
+  await sendEmail({ to, subject: "Код подтверждения нового email — Иврит", html });
+}
+
+export async function sendPasswordResetEmail(to: string, name: string, code: string) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Привет, ${escapeHtml(name)}!</h2>
+      <p>Мы получили запрос на сброс пароля для вашего аккаунта на сайте «Иврит». Введите этот код на сайте:</p>
+      ${codeBlock(code)}
+      <p style="color:#78716c;font-size:13px;">Код действителен 15 минут. Если вы не запрашивали сброс пароля — просто проигнорируйте это письмо, пароль останется прежним.</p>
+    </div>
+  `;
+
+  await sendEmail({ to, subject: "Код сброса пароля — Иврит", html });
 }
 
 export async function sendSupportEmail(fromName: string, fromEmail: string, message: string) {

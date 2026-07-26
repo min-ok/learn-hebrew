@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createAndSendVerificationEmail } from "@/lib/verification";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "Введите имя").max(60),
@@ -11,6 +12,10 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  if (!checkRateLimit(`register:${clientIp(request)}`, 10, 60 * 60_000)) {
+    return NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = registerSchema.safeParse(body);
 
@@ -38,8 +43,7 @@ export async function POST(request: Request) {
     data: { name, email: normalizedEmail, passwordHash },
   });
 
-  const origin = new URL(request.url).origin;
-  await createAndSendVerificationEmail(user.id, user.email, user.name, origin);
+  await createAndSendVerificationEmail(user.id, user.email, user.name);
 
   return NextResponse.json({ ok: true });
 }

@@ -45,21 +45,25 @@ model VerificationToken {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
-  // Set only for an email-change confirmation link; null means this token
+  code      String
+  // Set only for an email-change confirmation code; null means this code
   // confirms the account's current (registration) email instead.
   newEmail  String?
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId, code])
 }
 
 model PasswordResetToken {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
+  code      String
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId, code])
 }
 
 model HebrewText {

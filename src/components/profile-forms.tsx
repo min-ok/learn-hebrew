@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -112,13 +113,19 @@ function EmailSection({
   email: string;
   initialPendingEmail: string | null;
 }) {
+  const router = useRouter();
   const [newEmail, setNewEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pendingEmail, setPendingEmail] = useState(initialPendingEmail);
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [resent, setResent] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -136,7 +143,7 @@ function EmailSection({
 
     if (!res.ok) {
       const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Не удалось отправить письмо подтверждения");
+      setError(data?.error ?? "Не удалось отправить код подтверждения");
       return;
     }
 
@@ -144,6 +151,45 @@ function EmailSection({
     setNewEmail("");
     setPassword("");
     setSent(true);
+  }
+
+  async function handleConfirm(event: FormEvent) {
+    event.preventDefault();
+    if (!pendingEmail) return;
+    setConfirmError(null);
+    setConfirming(true);
+
+    const res = await fetch("/api/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: pendingEmail, code }),
+    });
+
+    setConfirming(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setConfirmError(data?.error ?? "Не удалось подтвердить email");
+      return;
+    }
+
+    setPendingEmail(null);
+    setCode("");
+    setSent(false);
+    router.refresh();
+  }
+
+  async function handleResend() {
+    if (!pendingEmail) return;
+    setResent(false);
+    setResending(true);
+    await fetch("/api/verify-email/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: pendingEmail }),
+    });
+    setResending(false);
+    setResent(true);
   }
 
   async function handleCancel() {
@@ -161,18 +207,53 @@ function EmailSection({
       </p>
 
       {pendingEmail && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-          <span>
-            Ожидает подтверждения: <strong>{pendingEmail}</strong> — проверьте почту
-          </span>
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={cancelling}
-            className="font-medium underline underline-offset-2 disabled:opacity-60"
-          >
-            Отменить
-          </button>
+        <div className="flex flex-col gap-3 rounded-lg bg-amber-50 px-3 py-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              Ожидает подтверждения: <strong>{pendingEmail}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="font-medium underline underline-offset-2 disabled:opacity-60"
+            >
+              Отменить
+            </button>
+          </div>
+          <form onSubmit={handleConfirm} className="flex flex-wrap items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium">Код из письма</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-center text-lg tracking-[0.4em] text-stone-900 outline-none focus:border-brand-600 dark:border-amber-800 dark:bg-stone-950 dark:text-stone-100"
+                placeholder="000000"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={confirming}
+              className="btn-primary btn-sm"
+            >
+              {confirming ? "Проверяем…" : "Подтвердить"}
+            </button>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="text-sm font-medium underline underline-offset-2 disabled:opacity-60"
+            >
+              {resending ? "Отправляем…" : "Отправить код ещё раз"}
+            </button>
+          </form>
+          {confirmError && <p className="text-red-700 dark:text-red-400">{confirmError}</p>}
+          {resent && !confirmError && <p>Код отправлен повторно.</p>}
         </div>
       )}
 
@@ -192,7 +273,7 @@ function EmailSection({
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         {sent && !error && (
           <p className="text-sm text-brand-700 dark:text-brand-400">
-            Письмо со ссылкой подтверждения отправлено на новый адрес.
+            Код подтверждения отправлен на новый адрес — введите его выше.
           </p>
         )}
         <SubmitButton loading={loading}>Сменить email</SubmitButton>
