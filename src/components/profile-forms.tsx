@@ -273,7 +273,7 @@ function EmailSection({
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         {sent && !error && (
           <p className="text-sm text-brand-700 dark:text-brand-400">
-            Код подтверждения отправлен на новый адрес — введите его выше.
+            Код подтверждения отправлен на новый адрес — введите его выше. Не пришло? Проверьте папку «Спам».
           </p>
         )}
         <SubmitButton loading={loading}>Сменить email</SubmitButton>

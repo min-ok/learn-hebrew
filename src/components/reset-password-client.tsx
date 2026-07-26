@@ -58,8 +58,11 @@ export function ResetPasswordClient({ defaultEmail }: { defaultEmail?: string })
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col justify-center px-4 py-12">
       <h1 className="mb-2 text-2xl font-bold text-stone-900 dark:text-stone-50">Новый пароль</h1>
-      <p className="mb-6 text-sm text-stone-600 dark:text-stone-400">
+      <p className="mb-1 text-sm text-stone-600 dark:text-stone-400">
         Введите код из письма и придумайте новый пароль.
+      </p>
+      <p className="mb-6 text-sm text-stone-500 dark:text-stone-500">
+        Не пришло? Проверьте папку «Спам».
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

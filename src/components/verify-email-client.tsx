@@ -74,6 +74,9 @@ export function VerifyEmailClient({ defaultEmail }: { defaultEmail?: string }) {
         <p className="mt-1 text-stone-600 dark:text-stone-400">
           Введите код из письма, которое мы отправили вам на почту.
         </p>
+        <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">
+          Не пришло? Проверьте папку «Спам».
+        </p>
       </div>
       <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3 text-left">
         <div className="flex flex-col gap-1">
