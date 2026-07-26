@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Укажите email" }, { status: 400 });
   }
 
-  if (!checkRateLimit(`verify-resend:${clientIp(request)}:${email}`, 3, 10 * 60_000)) {
+  if (!(await checkRateLimit(`verify-resend:${clientIp(request)}:${email}`, 3, 10 * 60_000))) {
     return NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
   }
 

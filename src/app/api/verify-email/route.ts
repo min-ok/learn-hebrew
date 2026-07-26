@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.toLowerCase();
   const { code } = parsed.data;
 
-  if (!checkRateLimit(`verify-email:${clientIp(request)}:${email}`, 8, 15 * 60_000)) {
+  if (!(await checkRateLimit(`verify-email:${clientIp(request)}:${email}`, 8, 15 * 60_000))) {
     return NextResponse.json({ error: "Слишком много попыток. Запросите новый код." }, { status: 429 });
   }
 

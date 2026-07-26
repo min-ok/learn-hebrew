@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Некорректный текст" }, { status: 400 });
   }
 
-  if (!checkRateLimit(`tts:${clientIp(request)}`, 15, 60_000)) {
+  if (!(await checkRateLimit(`tts:${clientIp(request)}`, 15, 60_000))) {
     return NextResponse.json({ error: "Слишком много запросов, попробуйте позже" }, { status: 429 });
   }
 

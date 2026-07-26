@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
   const email = parsed.data.email.toLowerCase();
 
-  if (!checkRateLimit(`forgot-password:${clientIp(request)}:${email}`, 3, 10 * 60_000)) {
+  if (!(await checkRateLimit(`forgot-password:${clientIp(request)}:${email}`, 3, 10 * 60_000))) {
     return NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
   }
 

@@ -12,7 +12,7 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!checkRateLimit(`register:${clientIp(request)}`, 10, 60 * 60_000)) {
+  if (!(await checkRateLimit(`register:${clientIp(request)}`, 10, 60 * 60_000))) {
     return NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
   }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Rubik } from "next/font/google";
-import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import Link from "next/link";
 import { Providers } from "@/components/providers";
@@ -23,8 +24,6 @@ export const metadata: Metadata = {
   description: "Тексты на иврите с переводом и карточки с интервальным повторением",
 };
 
-const CLOUDFLARE_ANALYTICS_TOKEN = process.env.NEXT_PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,13 +35,8 @@ export default function RootLayout({
       className={`${interSans.variable} ${rubikHebrew.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        {CLOUDFLARE_ANALYTICS_TOKEN && (
-          <Script
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon={JSON.stringify({ token: CLOUDFLARE_ANALYTICS_TOKEN })}
-            strategy="afterInteractive"
-          />
-        )}
+        <Analytics />
+        <SpeedInsights />
         <Providers>
           <SiteHeader />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
@@ -54,6 +48,14 @@ export default function RootLayout({
               Изучение иврита · сделано для практики ·{" "}
               <Link href="/support" className="underline-offset-2 transition hover:text-brand-700 hover:underline dark:hover:text-brand-400">
                 Поддержка
+              </Link>{" "}
+              ·{" "}
+              <Link href="/privacy" className="underline-offset-2 transition hover:text-brand-700 hover:underline dark:hover:text-brand-400">
+                Конфиденциальность
+              </Link>{" "}
+              ·{" "}
+              <Link href="/terms" className="underline-offset-2 transition hover:text-brand-700 hover:underline dark:hover:text-brand-400">
+                Условия
               </Link>
             </span>
           </footer>
