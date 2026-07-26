@@ -1,10 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createTopic } from "./actions";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteTopic } from "./actions";
 import { LayersIcon } from "@/components/icons";
+
+export const metadata: Metadata = {
+  title: "Карточки — Иврит",
+  description: "Карточки для запоминания слов с интервальным повторением.",
+};
 
 export default async function FlashcardsPage() {
   const session = await auth();

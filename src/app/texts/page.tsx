@@ -1,9 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import type { Level } from "@prisma/client";
 import { auth } from "@/auth";
 import { LEVELS, formatLevel } from "@/lib/levels";
 import { HomeIcon, SunIcon, CompassIcon, BookIcon, CheckCircleIcon } from "@/components/icons";
+
+export const metadata: Metadata = {
+  title: "Тексты на иврите — Иврит",
+  description: "Тексты на иврите по уровням с переводом, разбором слов и заданиями на понимание.",
+};
 
 const CARD_STYLES = [
   { Icon: HomeIcon, tone: "bg-brand-100 text-brand-700" },

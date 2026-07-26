@@ -1,11 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangleIcon, Volume2Icon } from "@/components/icons";
 
 export function SpeakButton({ text, className }: { text: string; className?: string }) {
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   async function handleClick() {
     if (state === "loading") return;
@@ -21,7 +28,9 @@ export function SpeakButton({ text, className }: { text: string; className?: str
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (!res.ok) throw new Error("tts failed");
       const blob = await res.blob();
-      const audio = new Audio(URL.createObjectURL(blob));
+      const url = URL.createObjectURL(blob);
+      objectUrlRef.current = url;
+      const audio = new Audio(url);
       audioRef.current = audio;
       setState("idle");
       void audio.play();

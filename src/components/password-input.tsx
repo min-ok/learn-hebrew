@@ -57,7 +57,6 @@ export function PasswordInput({
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        tabIndex={-1}
         aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
         className="absolute inset-y-0 right-0 flex items-center px-3 text-stone-500 transition hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
       >

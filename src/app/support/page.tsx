@@ -1,24 +1,19 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useSession } from "next-auth/react";
 import { CheckCircleIcon } from "@/components/icons";
 
 export default function SupportPage() {
   const { data: session } = useSession();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [nameOverride, setNameOverride] = useState<string | null>(null);
+  const [emailOverride, setEmailOverride] = useState<string | null>(null);
+  const name = nameOverride ?? session?.user?.name ?? "";
+  const email = emailOverride ?? session?.user?.email ?? "";
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-
-  useEffect(() => {
-    if (session?.user) {
-      setName((prev) => prev || session.user.name || "");
-      setEmail((prev) => prev || session.user.email || "");
-    }
-  }, [session]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -77,7 +72,7 @@ export default function SupportPage() {
             type="text"
             required
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => setNameOverride(e.target.value)}
             className="rounded-lg border border-stone-300 px-3 py-2 text-stone-900 outline-none transition focus:border-brand-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           />
         </div>
@@ -90,7 +85,7 @@ export default function SupportPage() {
             type="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmailOverride(e.target.value)}
             className="rounded-lg border border-stone-300 px-3 py-2 text-stone-900 outline-none transition focus:border-brand-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           />
         </div>

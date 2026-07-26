@@ -1,7 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import type { Level } from "@prisma/client";
 import { LEVELS, formatLevel } from "@/lib/levels";
+
+export const metadata: Metadata = {
+  title: "Грамматика иврита — Иврит",
+  description: "Темы по грамматике иврита по уровням — от основ до продвинутых конструкций.",
+};
 
 export default async function GrammarPage({
   searchParams,

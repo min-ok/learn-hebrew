@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { submitTextAttempt } from "@/app/texts/actions";
 import type { QuizAnswerValue, QuizQuestion, QuizResult } from "@/lib/quiz-types";
 
@@ -60,6 +60,7 @@ export function TextQuiz({ textId, questions }: { textId: string; questions: Qui
   );
   const [result, setResult] = useState<QuizResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const allAnswered = questions.every((q, i) => isAnswered(q, answers[i]));
 
@@ -77,6 +78,7 @@ export function TextQuiz({ textId, questions }: { textId: string; questions: Qui
   function handleRetry() {
     setAnswers(questions.map((q) => initialAnswer(q.type)));
     setResult(null);
+    setAttempt((a) => a + 1);
   }
 
   const blocks = groupIntoBlocks(questions);
@@ -91,7 +93,7 @@ export function TextQuiz({ textId, questions }: { textId: string; questions: Qui
           <div className="flex flex-col gap-3">
             {block.entries.map(({ question, index }) => (
               <QuestionCard
-                key={question.id}
+                key={`${question.id}-${attempt}`}
                 index={index}
                 question={question}
                 answer={answers[index]}
@@ -170,7 +172,7 @@ function QuestionCard({
         <FillBlankBody question={question} answer={answer} onChange={onChange} resultItem={resultItem} locked={locked} />
       )}
       {question.type === "ORDERING" && (
-        <OrderingBody question={question} answer={answer} onChange={onChange} resultItem={resultItem} locked={locked} />
+        <OrderingBody question={question} onChange={onChange} resultItem={resultItem} locked={locked} />
       )}
     </div>
   );
@@ -332,26 +334,18 @@ function FillBlankBody({
 
 function OrderingBody({
   question,
-  answer,
   onChange,
   resultItem,
   locked,
 }: {
   question: Extract<QuizQuestion, { type: "ORDERING" }>;
-  answer: QuizAnswerValue;
   onChange: (value: QuizAnswerValue) => void;
   resultItem: QuizResult["results"][number] | undefined;
   locked: boolean;
 }) {
   // Tracked by index (not word) so duplicate words behave correctly.
+  // Resets on retry because the parent remounts this component with a new key.
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-
-  useEffect(() => {
-    if (Array.isArray(answer) && answer.length === 0 && selectedIndices.length !== 0) {
-      setSelectedIndices([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answer]);
 
   const selectedWords = selectedIndices.map((i) => question.items[i]);
   const poolIndices = question.items

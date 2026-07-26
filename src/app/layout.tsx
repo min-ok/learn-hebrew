@@ -20,8 +20,24 @@ const rubikHebrew = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: "Иврит — изучение языка",
+  metadataBase: new URL("https://www.learn-hebrew.online"),
+  title: {
+    default: "Иврит — изучение языка",
+    template: "%s",
+  },
   description: "Тексты на иврите с переводом и карточки с интервальным повторением",
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "Иврит",
+    title: "Иврит — изучение языка",
+    description: "Тексты на иврите с переводом и карточки с интервальным повторением",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Иврит — изучение языка",
+    description: "Тексты на иврите с переводом и карточки с интервальным повторением",
+  },
 };
 
 export default function RootLayout({

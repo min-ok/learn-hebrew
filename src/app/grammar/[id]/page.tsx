@@ -1,9 +1,20 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { GrammarContent } from "@/components/grammar-content";
 import type { GrammarBlock } from "@/lib/grammar-types";
 import { formatLevel } from "@/lib/levels";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const topic = await prisma.grammarTopic.findUnique({ where: { id }, select: { title: true, summary: true } });
+  if (!topic) return {};
+  return {
+    title: `${topic.title} — Иврит`,
+    description: topic.summary,
+  };
+}
 
 export default async function GrammarTopicPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -35,6 +35,11 @@ export default function LoginPage() {
       return;
     }
 
+    if (result?.code === "too_many_attempts") {
+      setError("Слишком много попыток входа. Попробуйте позже.");
+      return;
+    }
+
     if (result?.error) {
       setError("Неверный email или пароль");
       return;

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { TranslationToggle } from "@/components/translation-toggle";
@@ -9,6 +10,16 @@ import type { QuizQuestion } from "@/lib/quiz-types";
 import { formatLevel } from "@/lib/levels";
 import { SpeakButton } from "@/components/speak-button";
 import { SelectableText } from "@/components/selectable-text";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const text = await prisma.hebrewText.findUnique({ where: { id }, select: { title: true, level: true } });
+  if (!text) return {};
+  return {
+    title: `${text.title} — Иврит`,
+    description: `Текст на иврите «${text.title}» (${formatLevel(text.level)}) с переводом и заданиями на понимание.`,
+  };
+}
 
 export default async function TextPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
